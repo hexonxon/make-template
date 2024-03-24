@@ -66,3 +66,22 @@ $(objdir)/%.o: $(srcdir)/%.c
 $(objdir)/%.o: $(srcdir)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
+#
+# Dependency generation
+#
+
+ifneq ($(filter-out clean show-vars,$(or $(MAKECMDGOALS),all)),)
+  include $(subst .o,.d,$(objs))
+endif
+
+# Accepts a compiler command line to generate a .d file and patches it with correct object paths
+# We want to transform compiler-generated "src.o: ..." into "$(objdir)/src.o $(objdir)/src.d: ..."
+define gen-dep-target
+  $1 > $@.$$$$ && sed 's,$(*F).o\s*:,$(objdir)/$*.o $@:,g' < $@.$$$$ > $@; rm -f $@.$$$$
+endef
+
+$(objdir)/%.d: $(srcdir)/%.c
+	$(call gen-dep-target,$(CC) -M $(CFLAGS) $<)
+
+$(objdir)/%.d: $(srcdir)/%.cpp
+	$(call gen-dep-target,$(CXX) -M $(CXXFLAGS) $<)
