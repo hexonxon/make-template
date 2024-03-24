@@ -5,6 +5,12 @@
 # Do not use make's built-in rules and variables
 MAKEFLAGS += -rR
 
+# Remove quiet modifier if V is defined to anything except 0
+Q := @
+ifneq ($(filter-out 0,$(V)),)
+  Q :=
+endif
+	
 CC := clang
 CFLAGS := -Wall --std=c11
 
@@ -50,7 +56,7 @@ all: $(objs)
 
 .PHONY: clean
 clean:
-	$(RMDIR) $(objdir)
+	$(Q) $(RMDIR) $(objdir)
 
 # For debugging
 .PHONY: show-vars
@@ -60,11 +66,11 @@ show-vars:
 
 # Default rule for *.c
 $(objdir)/%.o: $(srcdir)/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(Q) $(CC) $(CFLAGS) -c -o $@ $<
 
 # Default rule for *.cpp
 $(objdir)/%.o: $(srcdir)/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(Q) $(CXX) $(CXXFLAGS) -c -o $@ $<
 
 #
 # Dependency generation
@@ -81,7 +87,7 @@ define gen-dep-target
 endef
 
 $(objdir)/%.d: $(srcdir)/%.c
-	$(call gen-dep-target,$(CC) -M $(CFLAGS) $<)
+	$(Q) $(call gen-dep-target,$(CC) -M $(CFLAGS) $<)
 
 $(objdir)/%.d: $(srcdir)/%.cpp
-	$(call gen-dep-target,$(CXX) -M $(CXXFLAGS) $<)
+	$(Q) $(call gen-dep-target,$(CXX) -M $(CXXFLAGS) $<)
