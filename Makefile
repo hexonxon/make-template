@@ -5,6 +5,9 @@
 # Do not use make's built-in rules and variables
 MAKEFLAGS += -rR
 
+# Delete targets of failed rules by default
+.DELETE_ON_ERROR:
+
 # Remove quiet modifier if V is defined to anything except 0
 Q := @
 ifneq ($(filter-out 0,$(V)),)
@@ -21,6 +24,8 @@ RMDIR := rm -rf
 
 srcdir := src
 objdir := obj
+
+all:
 
 #
 # Target gathering
@@ -51,7 +56,6 @@ $(foreach subdir,$(sort $(call list-subdirs,$(srcdir))),\
 objs := $(patsubst %.o,$(objdir)/%.o,$(objs))
 
 .PHONY: all
-.DEFAULT_GOAL := all
 all: $(objs)
 
 .PHONY: clean
