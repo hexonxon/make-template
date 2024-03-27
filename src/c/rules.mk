@@ -1,2 +1,2 @@
-objs-c := \
+objs-m := \
 	c.o

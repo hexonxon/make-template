@@ -33,27 +33,23 @@ all:
 
 objs :=
 
-# List all subfolders of the first argument
-list-subdirs = $(shell find $1 -maxdepth 1 -mindepth 1 -type d -printf '%f ')
+# Find all rules.mk files to include as list of subdirs
+find-subdirs = $(patsubst $(srcdir)/%/rules.mk,%,$(shell find $(srcdir) -mindepth 2 -name rules.mk))
 
 # Expand per-subdir include body
 define include-subdir
-  objdir-$1 = $(objdir)/$1
-  srcdir-$1 = $(srcdir)/$1
-  include $(srcdir)/$1/rules.mk
-  $(shell mkdir -p $(objdir)/$1)
-  objs += $$(patsubst %.o,$1/%.o,$$(objs-$1))
+  srcdir-m := $(srcdir)/$1
+  objdir-m := $(objdir)/$1
+  include $$(srcdir-m)/rules.mk
+  objs += $$(patsubst %.o,$$(objdir-m)/%.o,$$(objs-m))
 endef
 
 # Include rules.mk for root folder
 $(eval $(call include-subdir))
 
 # Walk the subfolders and include rules.mk from each
-$(foreach subdir,$(sort $(call list-subdirs,$(srcdir))),\
+$(foreach subdir,$(sort $(call find-subdirs)),\
   $(eval $(call include-subdir,$(subdir))))
-
-# Add objdir prefix to accumulated objs
-objs := $(patsubst %.o,$(objdir)/%.o,$(objs))
 
 .PHONY: all
 all: $(objs)
@@ -62,17 +58,14 @@ all: $(objs)
 clean:
 	$(Q) $(RMDIR) $(objdir)
 
-# For debugging
 .PHONY: show-vars
 show-vars:
-	# $(call list-subdirs,$(srcdir))
+	# $(call find-subdirs)
 	# $(objs)
 
-# Default rule for *.c
 $(objdir)/%.o: $(srcdir)/%.c
 	$(Q) $(CC) $(CFLAGS) -c -o $@ $<
 
-# Default rule for *.cpp
 $(objdir)/%.o: $(srcdir)/%.cpp
 	$(Q) $(CXX) $(CXXFLAGS) -c -o $@ $<
 
@@ -81,6 +74,7 @@ $(objdir)/%.o: $(srcdir)/%.cpp
 #
 
 ifneq ($(filter-out clean show-vars,$(or $(MAKECMDGOALS),all)),)
+  $(shell mkdir -p $(dir $(objs)))
   include $(subst .o,.d,$(objs))
 endif
 

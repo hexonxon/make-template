@@ -1,1 +1,2 @@
-objs := main.o
+objs-m :=\
+	main.o
