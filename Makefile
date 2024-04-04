@@ -43,18 +43,15 @@ all:
 objs :=
 
 # Find all rules.mk files to include as list of subdirs
-find-subdirs = $(patsubst $(srcdir)/%/rules.mk,%,$(shell find $(srcdir) -mindepth 2 -name rules.mk))
+find-subdirs = $(patsubst %/rules.mk,%,$(shell find $(srcdir) -mindepth 1 -name rules.mk))
 
-# Expand per-subdir include body
+# expand per-subdir include body
 define include-subdir
-  srcdir-m := $(srcdir)/$1
-  objdir-m := $(objdir)/$1
+  srcdir-m := $1
+  objdir-m := $(subst $(srcdir),$(objdir),$1)
   include $$(srcdir-m)/rules.mk
   objs += $$(patsubst %.o,$$(objdir-m)/%.o,$$(objs-m))
 endef
-
-# Include rules.mk for root folder
-$(eval $(call include-subdir))
 
 # Walk the subfolders and include rules.mk from each
 $(foreach subdir,$(sort $(call find-subdirs)),\
@@ -83,7 +80,7 @@ $(objdir)/%.o: $(srcdir)/%.cpp
 #
 
 ifneq ($(filter-out clean show-vars,$(or $(MAKECMDGOALS),all)),)
-  $(shell mkdir -p $(dir $(objs)))
+  $(if $(objs),$(shell mkdir -p $(dir $(objs))))
   include $(subst .o,.d,$(objs))
 endif
 
