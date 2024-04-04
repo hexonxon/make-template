@@ -13,12 +13,21 @@ Q := @
 ifneq ($(filter-out 0,$(V)),)
   Q :=
 endif
-	
+
 CC := clang
 CFLAGS := -Wall --std=c11
 
 CXX := clang++
 CXXFLAGS := -Wall --std=c++11
+
+ifdef $(BUILD_DEBUG)
+	CCOMMONFLAGS += -Og -ggdb3
+else
+	CCOMMONFLAGS += -O2
+endif
+
+CFLAGS += $(CCOMMONFLAGS)
+CXXFLAGS += $(CCOMMONFLAGS)
 
 RMDIR := rm -rf
 
